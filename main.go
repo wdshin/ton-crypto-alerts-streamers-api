@@ -33,7 +33,11 @@ func main() {
 
 	go tonConnector.Start(ctx, 5*time.Second)
 
-	if err := notifiactionService.Start(":80"); err != nil {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	if err := notifiactionService.Start(port); err != nil {
 		log.Fatal(err)
 	}
 }
