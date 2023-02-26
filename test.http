@@ -1,0 +1,10 @@
+POST http://127.0.0.1:8080/alert
+Content-Type: application/json
+
+{
+	"amount": 20000000,
+	"nickname": "Ihor",
+	"clientId": "vlad10",
+	"text": "hello",
+	"sign": "sign-sign-sign-sign"
+}
