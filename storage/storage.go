@@ -10,4 +10,7 @@ type Storage interface {
 
 	AckTransaction(ctx context.Context, txHash string) error
 	StoreTransaction(ctx context.Context, tx Tx) error
+
+	StoreStreamer(ctx context.Context, streamer Streamer) error
+	GetStreamerClientIdByWalletAddress(ctx context.Context, walletAddress string) (string, error)
 }

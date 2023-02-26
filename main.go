@@ -13,7 +13,6 @@ import (
 )
 
 func main() {
-
 	ctx := context.Background()
 
 	pg, err := storage.NewPostgres(os.Getenv("PG_CONN"))
@@ -34,7 +33,7 @@ func main() {
 
 	go tonConnector.Start(ctx, 5*time.Second)
 
-	if err := notifiactionService.Start(":8080"); err != nil {
+	if err := notifiactionService.Start(":80"); err != nil {
 		log.Fatal(err)
 	}
 }

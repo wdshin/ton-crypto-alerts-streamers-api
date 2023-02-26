@@ -1,10 +1,16 @@
+
 POST http://127.0.0.1:8080/alert
 Content-Type: application/json
 
 {
 	"amount": 20000000,
 	"nickname": "Ihor",
-	"clientId": "vlad10",
+	"wallet_address": "EQB_ryLyj9tdIGuwBOqsxg6bPXeCD55J9GiEP4VJhtVwmz8n",
 	"text": "hello",
 	"sign": "sign-sign-sign-sign"
 }
+
+####################
+
+GET http://127.0.0.1:8080/streamer/EQB_ryLyj9tdIGuwBOqsxg6bPXeCD55J9GiEP4VJhtVwmz8n
+Content-Type: application/json

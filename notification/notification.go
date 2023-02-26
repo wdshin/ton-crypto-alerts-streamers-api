@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/google/uuid"
 	"github.com/labstack/gommon/log"
 	"github.com/vladtenlive/ton-donate/storage"
 )
@@ -32,20 +33,25 @@ func (n *Service) Start(port string) error {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	r.Post("/alert", n.Handler)
+	r.Post("/alert", n.NotificationHandler)
+	r.Get("/streamer/{wallet_address}", n.RegisterStreamerHandler)
+	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
 
 	return http.ListenAndServe(port, r)
 }
 
 type NotificationRequest struct {
-	Amount   uint64 `json:"amount"`
-	From     string `json:"nickname"`
-	ClientId string `json:"clientId"`
-	Message  string `json:"text"`
-	Sign     string `json:"sign"`
+	Amount        uint64 `json:"amount"`
+	From          string `json:"nickname"`
+	WalletAddress string `json:"wallet_address"`
+	ClientId      string `json:"clientId"`
+	Message       string `json:"text"`
+	Sign          string `json:"sign"`
 }
 
-func (n *Service) Handler(w http.ResponseWriter, r *http.Request) {
+func (n *Service) NotificationHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var req NotificationRequest
@@ -88,9 +94,16 @@ func (n *Service) Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: check wallet address from id
+	clientId, err := n.storage.GetStreamerClientIdByWalletAddress(ctx, req.WalletAddress)
+	if err != nil {
+		log.Error(err)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
 
-	err = n.Send(ctx, req)
+	req.ClientId = clientId
+
+	err = n.SendNotification(ctx, req)
 	if err != nil {
 		log.Error(err)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
@@ -107,10 +120,29 @@ func (n *Service) Handler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-type AlertRequest struct {
+func (n *Service) RegisterStreamerHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	_ = uuid.New().String()
+	clientId := "vlad10"
+
+	streamer := storage.Streamer{
+		WalletAddress: chi.URLParam(r, "wallet_address"),
+		ClientId:      clientId,
+	}
+
+	err := n.storage.StoreStreamer(ctx, streamer)
+	if err != nil {
+		log.Error(err)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	w.Write([]byte(fmt.Sprintf(`{"client_id": "%s"}`, clientId)))
+	w.WriteHeader(http.StatusCreated)
 }
 
-func (n *Service) Send(ctx context.Context, req NotificationRequest) error {
+func (n *Service) SendNotification(ctx context.Context, req NotificationRequest) error {
 	data, err := json.Marshal(req)
 	if err != nil {
 		return err

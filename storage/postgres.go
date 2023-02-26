@@ -115,3 +115,37 @@ func (p *Postgres) StoreTransaction(ctx context.Context, tx Tx) error {
 
 	return nil
 }
+
+func (p *Postgres) StoreStreamer(ctx context.Context, streamer Streamer) error {
+	_, err := p.db.ExecContext(
+		ctx,
+		`INSERT INTO streamers (
+			wallet_address,
+			client_id
+		) VALUES ($1, $2)`,
+		streamer.WalletAddress,
+		streamer.ClientId,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *Postgres) GetStreamerClientIdByWalletAddress(ctx context.Context, walletAddress string) (string, error) {
+	var clientId string
+
+	err := p.db.QueryRowContext(
+		ctx,
+		"SELECT client_id FROM streamers WHERE wallet_address = $1",
+		walletAddress,
+	).Scan(
+		&clientId,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	return clientId, nil
+}
