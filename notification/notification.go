@@ -64,6 +64,11 @@ func (n *Service) NotificationHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO: temporary solution
+	// time to propogate transaction
+	// need to change
+	time.Sleep(5 * time.Second)
+
 	tx, err := n.storage.GetTransactionBySign(ctx, req.Sign)
 	if err != nil {
 		log.Error(err)
