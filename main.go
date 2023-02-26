@@ -46,7 +46,7 @@ func main() {
 
 	notifiactionService := notification.NewService(http.DefaultClient, pg)
 
-	go tonConnector.Start(ctx, 5*time.Second)
+	go tonConnector.Start(ctx, 3*time.Second)
 
 	if err := notifiactionService.Start(port); err != nil {
 		log.Fatal(err)

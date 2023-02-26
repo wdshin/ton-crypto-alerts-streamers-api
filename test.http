@@ -12,5 +12,21 @@ Content-Type: application/json
 
 ####################
 
-GET http://127.0.0.1:8080/streamer/EQB_ryLyj9tdIGuwBOqsxg6bPXeCD55J9GiEP4VJhtVwmz8n
+
+GET https://donate-service.onrender.com/streamer/EQB_ryLyj9tdIGuwBOqsxg6bPXeCD55J9GiEP4VJhtVwmz8n
 Content-Type: application/json
+
+####################
+
+POST https://donate-service.onrender.com/alert
+Content-Type: application/json
+
+{
+	"amount": 20000000,
+	"nickname": "Ihor",
+	"wallet_address": "EQB_ryLyj9tdIGuwBOqsxg6bPXeCD55J9GiEP4VJhtVwmz8n",
+	"text": "hello",
+	"sign": "g_sign"
+}
+
+####################

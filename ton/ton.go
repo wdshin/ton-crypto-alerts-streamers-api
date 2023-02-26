@@ -45,13 +45,7 @@ func New(
 
 func (c *Connector) Start(ctx context.Context, d time.Duration) {
 	for {
-		func() {
-			ctx, cancel := context.WithTimeout(ctx, d)
-			defer cancel()
-
-			c.GetTransactions(ctx)
-		}()
-
+		go c.GetTransactions(ctx)
 		time.Sleep(d)
 	}
 }

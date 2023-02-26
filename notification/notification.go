@@ -148,8 +148,6 @@ func (n *Service) SendNotification(ctx context.Context, req NotificationRequest)
 		return err
 	}
 
-	fmt.Println(string(data))
-
 	resp, err := n.client.Post(
 		"https://seahorse-app-qdt2w.ondigitalocean.app/payments",
 		"application/json",
