@@ -26,7 +26,7 @@ func main() {
 	}
 
 	contractAddress := os.Getenv("CONTRACT_ADDRESS")
-	if port == "" {
+	if contractAddress == "" {
 		contractAddress = "EQB_ryLyj9tdIGuwBOqsxg6bPXeCD55J9GiEP4VJhtVwmz8n"
 	}
 

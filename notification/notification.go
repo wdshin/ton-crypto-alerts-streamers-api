@@ -37,6 +37,7 @@ func (n *Service) Start(port string) error {
 	r.Get("/streamer/{wallet_address}", n.RegisterStreamerHandler)
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("ok"))
 	})
 
 	return http.ListenAndServe(":"+port, r)
