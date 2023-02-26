@@ -15,14 +15,29 @@ import (
 func main() {
 	ctx := context.Background()
 
-	pg, err := storage.NewPostgres(os.Getenv("PG_CONN"))
+	pgConn := os.Getenv("PG_CONN")
+	if pgConn == "" {
+		pgConn = "postgres://postgres:mysecretpassword@localhost:5432/postgres?sslmode=disable"
+	}
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	contractAddress := os.Getenv("CONTRACT_ADDRESS")
+	if port == "" {
+		contractAddress = "EQB_ryLyj9tdIGuwBOqsxg6bPXeCD55J9GiEP4VJhtVwmz8n"
+	}
+
+	pg, err := storage.NewPostgres(pgConn)
 	if err != nil {
 		panic(err)
 	}
 
 	tonConnector, err := ton.New(
 		ctx,
-		"EQB_ryLyj9tdIGuwBOqsxg6bPXeCD55J9GiEP4VJhtVwmz8n",
+		contractAddress,
 		pg,
 	)
 	if err != nil {
@@ -33,10 +48,6 @@ func main() {
 
 	go tonConnector.Start(ctx, 5*time.Second)
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
 	if err := notifiactionService.Start(port); err != nil {
 		log.Fatal(err)
 	}
