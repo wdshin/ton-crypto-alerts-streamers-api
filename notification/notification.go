@@ -39,7 +39,7 @@ func (n *Service) Start(port string) error {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	return http.ListenAndServe(port, r)
+	return http.ListenAndServe(":"+port, r)
 }
 
 type NotificationRequest struct {
@@ -123,8 +123,7 @@ func (n *Service) NotificationHandler(w http.ResponseWriter, r *http.Request) {
 func (n *Service) RegisterStreamerHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	_ = uuid.New().String()
-	clientId := "vlad10"
+	clientId := uuid.New().String()
 
 	streamer := storage.Streamer{
 		WalletAddress: chi.URLParam(r, "wallet_address"),
