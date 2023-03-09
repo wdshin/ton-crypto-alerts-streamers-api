@@ -7,11 +7,13 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Tx struct {
 	Sign          string
 	TxHash        string
+	Message       string
 	WalletAddress string
 	Amount        uint64
 	Lt            uint64
@@ -60,6 +62,28 @@ func (m *MongoStorage) CreateDonation(ctx context.Context, donation Donation) (*
 	collectionName := os.Getenv("DB_DONATIONS_COLLECTION_NAME")
 
 	result, err := m.client.Database(dbName).Collection(collectionName).InsertOne(ctx, donation)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (m *MongoStorage) SaveDonation(ctx context.Context, transaction Tx) (*mongo.UpdateResult, error) {
+	dbName := os.Getenv("DB_NAME")
+	collectionName := os.Getenv("DB_DONATIONS_COLLECTION_NAME")
+
+	opts := options.Update().SetUpsert(true)
+	filter := bson.D{{Key: "sign", Value: transaction.Sign}}
+	update := bson.D{{Key: "$set", Value: bson.D{
+		{Key: "tx_hash", Value: transaction.TxHash},
+		{Key: "wallet_address", Value: transaction.WalletAddress},
+		{Key: "amount", Value: transaction.Amount},
+		{Key: "lt", Value: transaction.Lt},
+		{Key: "verified", Value: true}}}}
+
+	result, err := m.client.Database(dbName).Collection(collectionName).UpdateOne(ctx, filter, update, opts)
+
 	if err != nil {
 		return nil, err
 	}

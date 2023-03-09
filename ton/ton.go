@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/vladtenlive/ton-donate/storage"
 	"github.com/xssnick/tonutils-go/address"
 	"github.com/xssnick/tonutils-go/liteclient"
+	"github.com/xssnick/tonutils-go/tlb"
 	"github.com/xssnick/tonutils-go/ton"
 )
 
@@ -29,7 +29,9 @@ func New(
 ) (*Connector, error) {
 	connPool := liteclient.NewConnectionPool()
 
-	configUrl := "https://ton-blockchain.github.io/global.config.json"
+	// configUrl := "https://ton-blockchain.github.io/global.config.json"
+	configUrl := "https://ton-blockchain.github.io/testnet-global.config.json"
+
 	err := connPool.AddConnectionsFromConfigUrl(ctx, configUrl)
 	if err != nil {
 		return nil, err
@@ -42,7 +44,8 @@ func New(
 		mongoStorage: mongoStorage,
 		Address:      address.MustParseAddr(watchAddress),
 		Client:       client,
-		Network:      "mainnet",
+		// Network:      "mainnet",
+		Network: "testnet",
 	}, nil
 }
 
@@ -79,55 +82,51 @@ func (c *Connector) GetTransactions(ctx context.Context) {
 	hash := account.LastTxHash
 	lt := account.LastTxLT
 
-	seenLt, err := c.storage.GetLastTransactionLt(ctx)
-	if err != nil {
-		log.Println(err)
-	}
-
-	if seenLt >= lt {
-		return
-	}
-
-	txs, err := c.Client.ListTransactions(ctx, c.Address, 100, lt, hash)
+	txs, err := c.Client.ListTransactions(ctx, c.Address, 5, lt, hash)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
 	for _, tx := range txs {
+		transaction := parseBody(tx)
 
-		if len(tx.IO.Out) > 0 {
-			continue
-		}
+		fmt.Println("transaction: ", transaction)
 
-		txHash := fmt.Sprintf("%x", tx.Hash)
-		if ok, err := c.storage.CheckTransaction(ctx, txHash); err == nil && ok {
-			continue
-		}
-
-		txInfo := tx.IO.In.AsInternal()
-
-		data := strings.Split(txInfo.Comment(), ":")
-		if len(data) != 2 {
-			continue
-		}
-
-		streamerAddress := data[0]
-		messageSign := data[1]
-
-		transaction := storage.Tx{
-			Sign:          messageSign,
-			TxHash:        txHash,
-			WalletAddress: streamerAddress,
-			Amount:        txInfo.Amount.NanoTON().Uint64(),
-			Lt:            tx.LT,
-			Acked:         false,
-		}
-
-		err = c.storage.StoreTransaction(ctx, transaction)
+		_, err := c.mongoStorage.SaveDonation(ctx, transaction)
 		if err != nil {
 			log.Println(err)
-			continue
 		}
+
+		// ToDo: Publish notify event
 	}
+}
+
+func parseBody(trx *tlb.Transaction) storage.Tx {
+	txHash := fmt.Sprintf("%x", trx.Hash)
+
+	payload := trx.IO.In.Msg.Payload().BeginParse()
+	payload.LoadUInt(32) // skip op code
+	streamerAddress, err := payload.LoadAddr()
+	if err == nil {
+		fmt.Println(streamerAddress)
+	}
+	sign, err := payload.LoadStringSnake()
+	if err == nil {
+		fmt.Println(sign)
+	}
+
+	txInfo := trx.IO.In.AsInternal()
+
+	transaction := storage.Tx{
+		Sign:          sign,
+		Message:       txInfo.Comment(),
+		TxHash:        txHash,
+		WalletAddress: fmt.Sprintf("%s", streamerAddress),
+		Amount:        txInfo.Amount.NanoTON().Uint64(),
+		Lt:            trx.LT,
+		Acked:         false,
+	}
+
+	return transaction
 }

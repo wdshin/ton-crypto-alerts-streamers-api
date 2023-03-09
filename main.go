@@ -6,14 +6,13 @@ import (
 	"log"
 	"net/http"
 	"os"
-
-	// "time"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/vladtenlive/ton-donate/handlers"
 	"github.com/vladtenlive/ton-donate/storage"
-	// "github.com/vladtenlive/ton-donate/ton"
+	"github.com/vladtenlive/ton-donate/ton"
 )
 
 func main() {
@@ -31,7 +30,8 @@ func main() {
 
 	contractAddress := os.Getenv("CONTRACT_ADDRESS")
 	if contractAddress == "" {
-		contractAddress = "EQB_ryLyj9tdIGuwBOqsxg6bPXeCD55J9GiEP4VJhtVwmz8n"
+		// contractAddress = "EQB_ryLyj9tdIGuwBOqsxg6bPXeCD55J9GiEP4VJhtVwmz8n"
+		contractAddress = "EQAKOF-lITE_xjF8WNuXtV6I9B3vOGEgvEdc2YX9cojyidlZ"
 	}
 
 	// pg, err := storage.NewPostgres(pgConn)
@@ -45,19 +45,20 @@ func main() {
 		panic(err)
 	}
 
-	// tonConnector, err := ton.New(
-	// 	ctx,
-	// 	contractAddress,
-	// 	pg,
-	// )
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	tonConnector, err := ton.New(
+		ctx,
+		contractAddress,
+		nil,
+		mongo,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// s := handlers.NewService(http.DefaultClient, pg, mongo)
 	s := handlers.NewService(http.DefaultClient, nil, mongo)
 
-	// go tonConnector.Start(ctx, 3*time.Second)
+	go tonConnector.Start(ctx, 3*time.Second)
 
 	// APIs
 	r := chi.NewRouter()
