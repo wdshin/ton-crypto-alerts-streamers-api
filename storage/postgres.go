@@ -124,7 +124,7 @@ func (p *Postgres) StoreStreamer(ctx context.Context, streamer Streamer) error {
 			client_id
 		) VALUES ($1, $2)`,
 		streamer.WalletAddress,
-		streamer.ClientId,
+		streamer.StreamerId,
 	)
 	if err != nil {
 		return err

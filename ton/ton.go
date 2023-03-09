@@ -14,16 +14,18 @@ import (
 )
 
 type Connector struct {
-	Address *address.Address
-	Network string
-	Client  *ton.APIClient
-	storage storage.Storage
+	Address      *address.Address
+	Network      string
+	Client       *ton.APIClient
+	storage      storage.Storage
+	mongoStorage *storage.MongoStorage
 }
 
 func New(
 	ctx context.Context,
 	watchAddress string,
 	storage storage.Storage,
+	mongoStorage *storage.MongoStorage,
 ) (*Connector, error) {
 	connPool := liteclient.NewConnectionPool()
 
@@ -36,10 +38,11 @@ func New(
 	client := ton.NewAPIClient(connPool)
 
 	return &Connector{
-		storage: storage,
-		Address: address.MustParseAddr(watchAddress),
-		Client:  client,
-		Network: "mainnet",
+		storage:      storage,
+		mongoStorage: mongoStorage,
+		Address:      address.MustParseAddr(watchAddress),
+		Client:       client,
+		Network:      "mainnet",
 	}, nil
 }
 

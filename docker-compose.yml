@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+  # streaming:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: streaming-dev
+  #   stdin_open: true # docker run -i
+  #   tty: true        # docker run -t
+  #   ports:
+  #     - "3901:8080"
+  #   volumes:
+  #     - .:/usr/src/app
+  #   env_file:
+  #     - ./.env.${ENV}
+  #   depends_on:
+  #     - mongodb
+  #   networks:
+  #     - dev
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpassword
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - dev
+
+volumes:
+  mongodb_data:
+
+networks:
+  dev:

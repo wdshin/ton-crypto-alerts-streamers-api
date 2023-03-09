@@ -2,4 +2,7 @@
 ton-donate
 .vscode
 
+.env*
+!.env.example
+
 
