@@ -2,6 +2,7 @@ package ton
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -19,6 +20,7 @@ type Connector struct {
 	Client       *ton.APIClient
 	storage      storage.Storage
 	mongoStorage *storage.MongoStorage
+	notifier     *Notifier
 }
 
 func New(
@@ -26,6 +28,7 @@ func New(
 	watchAddress string,
 	storage storage.Storage,
 	mongoStorage *storage.MongoStorage,
+	notifier *Notifier,
 ) (*Connector, error) {
 	connPool := liteclient.NewConnectionPool()
 
@@ -44,6 +47,7 @@ func New(
 		mongoStorage: mongoStorage,
 		Address:      address.MustParseAddr(watchAddress),
 		Client:       client,
+		notifier:     notifier,
 		// Network:      "mainnet",
 		Network: "testnet",
 	}, nil
@@ -82,7 +86,7 @@ func (c *Connector) GetTransactions(ctx context.Context) {
 	hash := account.LastTxHash
 	lt := account.LastTxLT
 
-	txs, err := c.Client.ListTransactions(ctx, c.Address, 5, lt, hash)
+	txs, err := c.Client.ListTransactions(ctx, c.Address, 100, lt, hash)
 	if err != nil {
 		log.Println(err)
 		return
@@ -91,14 +95,62 @@ func (c *Connector) GetTransactions(ctx context.Context) {
 	for _, tx := range txs {
 		transaction := parseBody(tx)
 
-		fmt.Println("transaction: ", transaction)
-
-		_, err := c.mongoStorage.SaveDonation(ctx, transaction)
+		donation, err := c.mongoStorage.GetDonationBySign(ctx, transaction.Sign)
 		if err != nil {
-			log.Println(err)
+			log.Println("(1) GetDonationBySign: ", err)
+			// ToDo: just skip for now, later we can figure out
+			continue
 		}
 
-		// ToDo: Publish notify event
+		if (donation != nil && donation.Sign == "") || transaction.Sign == "" { // ToDO: why some transactions have empty sign and wallet?
+			continue
+		}
+		_, err = c.mongoStorage.SaveDonation(ctx, transaction)
+		if err != nil {
+			log.Println("Failed to save donation transaction info: ", err)
+		}
+
+		// fmt.Println("transaction: ", transaction)
+		donation, err = c.mongoStorage.GetDonationBySign(ctx, transaction.Sign)
+		if err != nil {
+			log.Println("(2) GetDonationBySign: ", err)
+			// ToDo: just skip for now, later we can figure out
+			continue
+		}
+
+		if donation.Acked {
+			// No need to process acked transaction
+			return
+		}
+
+		donationAmount := uint64(transaction.Amount)
+		notificationReq := NotificationRequest{
+			Id:         fmt.Sprintf(transaction.TxHash), // or could be d.Sign depends on Storage
+			Amount:     donationAmount,
+			Text:       transaction.Message,
+			Nickname:   donation.From,
+			StreamerId: donation.StreamerId,
+		}
+		err = c.notifier.Send(notificationReq)
+		if err != nil {
+			var notificationError NotificationError
+			if errors.As(err, &notificationError) {
+				log.Println("Resubmit request id: ", notificationError.Id)
+			} else {
+				log.Println(err)
+			}
+		} else {
+			_, err = c.mongoStorage.AckDonation(ctx, transaction)
+			if err != nil {
+				log.Println("Failed to ack donation with sign: ", transaction.Sign)
+				return
+			}
+
+			_, err = c.mongoStorage.AddToCurrentAmount(ctx, donation.StreamerId, donationAmount)
+			if err != nil {
+				log.Println("Failed to add donation to widget total sum: ", transaction.Sign)
+			}
+		}
 	}
 }
 
@@ -109,11 +161,11 @@ func parseBody(trx *tlb.Transaction) storage.Tx {
 	payload.LoadUInt(32) // skip op code
 	streamerAddress, err := payload.LoadAddr()
 	if err == nil {
-		fmt.Println(streamerAddress)
+		// fmt.Println(streamerAddress)
 	}
 	sign, err := payload.LoadStringSnake()
 	if err == nil {
-		fmt.Println(sign)
+		// fmt.Println(sign)
 	}
 
 	txInfo := trx.IO.In.AsInternal()

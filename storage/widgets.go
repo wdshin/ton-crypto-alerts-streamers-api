@@ -68,3 +68,28 @@ func (m *MongoStorage) CreateWidget(ctx context.Context, widget Widget) (*mongo.
 
 	return result, nil
 }
+
+func (m *MongoStorage) AddToCurrentAmount(ctx context.Context, streamerId string, donatedAmount uint64) (*mongo.UpdateResult, error) {
+	dbName := os.Getenv("DB_NAME")
+	collectionName := os.Getenv("DB_WIDGETS_COLLECTION_NAME")
+
+	// Check if streamer exist
+	filter := bson.D{{Key: "streamer_id", Value: streamerId}}
+	_, err := getStreamer(ctx, m.client, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	opts := options.Update().SetUpsert(true)
+	filter = bson.D{{Key: "streamer_id", Value: streamerId}}
+	update := bson.D{{Key: "$inc", Value: bson.D{
+		{Key: "amount_current", Value: donatedAmount}}}}
+
+	result, err := m.client.Database(dbName).Collection(collectionName).UpdateOne(ctx, filter, update, opts)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}

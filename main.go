@@ -45,11 +45,13 @@ func main() {
 		panic(err)
 	}
 
+	n := ton.NewNotifier(http.DefaultClient, "https://seahorse-app-qdt2w.ondigitalocean.app/payments")
 	tonConnector, err := ton.New(
 		ctx,
 		contractAddress,
 		nil,
 		mongo,
+		n,
 	)
 	if err != nil {
 		log.Fatal(err)

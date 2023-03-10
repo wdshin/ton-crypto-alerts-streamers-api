@@ -32,12 +32,12 @@ func (n *Service) GetDonationListHandler(w http.ResponseWriter, r *http.Request)
 }
 
 type CreateDonationRequest struct {
-	Amount        float64 `json:"amount"`
-	From          string  `json:"nickname"`
-	WalletAddress string  `json:"wallet_address"`
-	StreamerId    string  `json:"streamerId"`
-	Message       string  `json:"text"`
-	Sign          string  `json:"sign"`
+	Amount        uint64 `json:"amount"`
+	From          string `json:"nickname"`
+	WalletAddress string `json:"wallet_address"`
+	StreamerId    string `json:"streamerId"`
+	Message       string `json:"text"`
+	Sign          string `json:"sign"`
 }
 
 func (s *Service) CreateDonationHandler(w http.ResponseWriter, r *http.Request) {
@@ -75,14 +75,14 @@ func (s *Service) CreateDonationHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	newDonation := storage.Donation{
-		TxHash:        "", // we dont know it at this point, only after it's been processed by Ton
-		Amount:        req.Amount,
-		WalletAddress: req.WalletAddress,
-		Sign:          req.Sign,
 		From:          req.From,
 		StreamerId:    req.StreamerId,
+		WalletAddress: req.WalletAddress,
+		Amount:        req.Amount,
 		Message:       req.Message,
-		Lt:            "", // datetime of what?
+		Sign:          req.Sign,
+		TxHash:        "", // we dont know it at this point, only after it's been processed by Ton
+		Lt:            0,  // we dont know it at this point, only after it's been processed by Ton
 		Verified:      false,
 		Acked:         false,
 	}
