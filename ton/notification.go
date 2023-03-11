@@ -7,10 +7,6 @@ import (
 	"net/http"
 )
 
-const (
-	DefaultWidgetUri = "https://seahorse-app-qdt2w.ondigitalocean.app/payments"
-)
-
 type NotificationError struct {
 	Id string
 }
@@ -33,10 +29,6 @@ type Notifier struct {
 }
 
 func NewNotifier(client *http.Client, widgetUri string) *Notifier {
-	if widgetUri == "" {
-		widgetUri = DefaultWidgetUri
-	}
-
 	return &Notifier{
 		client:    client,
 		widgetUri: widgetUri,

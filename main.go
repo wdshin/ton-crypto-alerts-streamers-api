@@ -13,31 +13,17 @@ import (
 	"github.com/vladtenlive/ton-donate/handlers"
 	"github.com/vladtenlive/ton-donate/storage"
 	"github.com/vladtenlive/ton-donate/ton"
+	"github.com/vladtenlive/ton-donate/utils"
 )
 
 func main() {
 	ctx := context.Background()
 
-	pgConn := os.Getenv("PG_CONN")
-	if pgConn == "" {
-		pgConn = "postgres://postgres:mysecretpassword@localhost:5432/postgres?sslmode=disable"
-	}
+	utils.ValidateEnvVariables()
 
 	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-
 	contractAddress := os.Getenv("CONTRACT_ADDRESS")
-	if contractAddress == "" {
-		// contractAddress = "EQB_ryLyj9tdIGuwBOqsxg6bPXeCD55J9GiEP4VJhtVwmz8n"
-		contractAddress = "EQAKOF-lITE_xjF8WNuXtV6I9B3vOGEgvEdc2YX9cojyidlZ"
-	}
-
-	// pg, err := storage.NewPostgres(pgConn)
-	// if err != nil {
-	// 	panic(err)
-	// }
+	notificationUrl := os.Getenv("NOTIFICATION_URL")
 
 	mongo, err := storage.NewMongoClient(ctx)
 	if err != nil {
@@ -45,7 +31,7 @@ func main() {
 		panic(err)
 	}
 
-	n := ton.NewNotifier(http.DefaultClient, "https://seahorse-app-qdt2w.ondigitalocean.app/payments")
+	n := ton.NewNotifier(http.DefaultClient, notificationUrl)
 	tonConnector, err := ton.New(
 		ctx,
 		contractAddress,
@@ -57,7 +43,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// s := handlers.NewService(http.DefaultClient, pg, mongo)
 	s := handlers.NewService(http.DefaultClient, nil, mongo)
 
 	go tonConnector.Start(ctx, 3*time.Second)

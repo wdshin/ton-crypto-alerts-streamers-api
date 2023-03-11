@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"errors"
 	"os"
 	"time"
 
@@ -34,6 +35,27 @@ type Donation struct {
 	Acked         bool   `json:"acked,omitempty" bson:"acked,omitempty"`
 
 	// ToDo: Add createdAt/modifiedAt
+}
+
+func (m *MongoStorage) GetStreamerDonations(ctx context.Context, streamerId string) (*[]Donation, error) {
+	dbName := os.Getenv("DB_NAME")
+	collectionName := os.Getenv("DB_DONATIONS_COLLECTION_NAME")
+
+	filter := bson.D{
+		{Key: "streamer_id", Value: streamerId},
+	}
+	opts := options.Find() //.SetLimit(100) // ToDo: Add paging
+	iter, err := m.client.Database(dbName).Collection(collectionName).Find(ctx, filter, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	var results []Donation
+	if err := iter.All(ctx, &results); err != nil {
+		return nil, errors.New("Failed to retrieve data!")
+	}
+
+	return &results, nil
 }
 
 func (m *MongoStorage) GetDonationBySign(ctx context.Context, sign string) (*Donation, error) {

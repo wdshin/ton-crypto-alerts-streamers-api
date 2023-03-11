@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/vladtenlive/ton-donate/storage"
@@ -31,9 +32,7 @@ func New(
 	notifier *Notifier,
 ) (*Connector, error) {
 	connPool := liteclient.NewConnectionPool()
-
-	// configUrl := "https://ton-blockchain.github.io/global.config.json"
-	configUrl := "https://ton-blockchain.github.io/testnet-global.config.json"
+	configUrl := os.Getenv("TON_CONFIG_URL")
 
 	err := connPool.AddConnectionsFromConfigUrl(ctx, configUrl)
 	if err != nil {
@@ -48,8 +47,7 @@ func New(
 		Address:      address.MustParseAddr(watchAddress),
 		Client:       client,
 		notifier:     notifier,
-		// Network:      "mainnet",
-		Network: "testnet",
+		Network:      os.Getenv("TON_NET"),
 	}, nil
 }
 
@@ -130,7 +128,7 @@ func (c *Connector) GetTransactions(ctx context.Context) {
 			return
 		}
 
-		fmt.Println("transaction: ", transaction)
+		// fmt.Println("transaction: ", transaction)
 		donationAmount := uint64(transaction.Amount)
 		notificationReq := NotificationRequest{
 			Id:         fmt.Sprintf(transaction.TxHash), // or could be d.Sign depends on Storage

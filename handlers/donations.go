@@ -10,25 +10,50 @@ import (
 )
 
 type GetDonationListResponse struct {
-	Data  string `json:"data"`
-	Error string `json:"error"`
+	Data  *[]GetDonationListModel `json:"data"`
+	Error string                  `json:"error"`
+}
+
+type GetDonationListModel struct {
+	From    string `json:"nickname,omitempty" bson:"nickname,omitempty"`
+	Message string `json:"text,omitempty" bson:"message,omitempty"`
+	Amount  uint64 `json:"amount,omitempty" bson:"amount,omitempty"`
 }
 
 // ToDo: Confirmed (from transaction), Acked (for sending to notificator)
 
 func (n *Service) GetDonationListHandler(w http.ResponseWriter, r *http.Request) {
-	// ctx := r.Context()
+	ctx := r.Context()
 
-	id := parsers.GetStreamerId(r)
-	if id == "" {
-		response, _ := json.Marshal(&GetDonationListResponse{"", "Failed to parse streamer id!"})
+	streamerId := parsers.GetStreamerId(r)
+	if streamerId == "" {
+		response, _ := json.Marshal(&GetDonationListResponse{nil, "Failed to parse streamer id."})
 
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(response)
 		return
 	}
 
-	// ToDo: Load all streamer donations based on streamer id.
+	donations, err := n.mongoStorage.GetStreamerDonations(ctx, streamerId)
+	if err != nil {
+		response, _ := json.Marshal(&GetDonationListResponse{nil, "Failed to load streamer donations."})
+
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(response)
+		return
+	}
+
+	donationsModel := make([]GetDonationListModel, 0)
+	for _, donation := range *donations {
+		donationsModel = append(donationsModel, GetDonationListModel{
+			From:    donation.From,
+			Message: donation.Message,
+			Amount:  donation.Amount})
+	}
+	response, _ := json.Marshal(&GetDonationListResponse{&donationsModel, ""})
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(response)
 }
 
 type CreateDonationRequest struct {
