@@ -66,6 +66,7 @@ func (c *Connector) GetTransactions(ctx context.Context) {
 			fmt.Println("Recovered in f", r)
 		}
 	}()
+	// return
 
 	block, err := c.Client.CurrentMasterchainInfo(ctx)
 	if err != nil {
@@ -105,12 +106,18 @@ func (c *Connector) GetTransactions(ctx context.Context) {
 		if (donation != nil && donation.Sign == "") || transaction.Sign == "" { // ToDO: why some transactions have empty sign and wallet?
 			continue
 		}
-		_, err = c.mongoStorage.SaveDonation(ctx, transaction)
+
+		streamerId, err := getOrLoadStreamerId(ctx, c, donation, transaction)
+		if err != nil {
+			log.Println("Skip transaction processing when wallet address is empty")
+			continue
+		}
+
+		_, err = c.mongoStorage.SaveDonation(ctx, transaction, streamerId)
 		if err != nil {
 			log.Println("Failed to save donation transaction info: ", err)
 		}
 
-		// fmt.Println("transaction: ", transaction)
 		donation, err = c.mongoStorage.GetDonationBySign(ctx, transaction.Sign)
 		if err != nil {
 			log.Println("(2) GetDonationBySign: ", err)
@@ -123,6 +130,7 @@ func (c *Connector) GetTransactions(ctx context.Context) {
 			return
 		}
 
+		fmt.Println("transaction: ", transaction)
 		donationAmount := uint64(transaction.Amount)
 		notificationReq := NotificationRequest{
 			Id:         fmt.Sprintf(transaction.TxHash), // or could be d.Sign depends on Storage
@@ -181,4 +189,19 @@ func parseBody(trx *tlb.Transaction) storage.Tx {
 	}
 
 	return transaction
+}
+
+func getOrLoadStreamerId(ctx context.Context, c *Connector, donation *storage.Donation, transaction storage.Tx) (string, error) {
+	if donation == nil || donation.StreamerId == "" {
+		log.Println("Mapping streamer id by transaction wallet address. Possibly donation request failed to save.")
+		streamer, err := c.mongoStorage.GetStreamerByWalletAddress(ctx, transaction.WalletAddress)
+		if err != nil {
+			log.Println("Failed to map streamer id by transaction wallet address.")
+			return "", err
+		}
+
+		return streamer.StreamerId, nil
+	}
+
+	return donation.StreamerId, nil
 }

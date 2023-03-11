@@ -11,10 +11,11 @@ import (
 )
 
 type Widget struct {
-	StreamerId    string  `json:"streamerId,omitempty" bson:"streamer_id,omitempty"`
-	Type          string  `json:"type,omitempty" bson:"type,omitempty"`
-	AmountGoal    float64 `json:"amount_goal,omitempty" bson:"amount_goal,omitempty"`
-	AmountCurrent float64 `json:"amount_current,omitempty" bson:"amount_current,omitempty"`
+	StreamerId    string `json:"streamerId,omitempty" bson:"streamer_id,omitempty"`
+	Type          string `json:"type,omitempty" bson:"type,omitempty"`
+	AmountGoal    uint64 `json:"amount_goal,omitempty" bson:"amount_goal,omitempty"`
+	AmountCurrent uint64 `json:"amount_current,omitempty" bson:"amount_current,omitempty"`
+	IsActive      bool   `json:"isActive,omitempty" bson:"is_active,omitempty"`
 }
 
 func (m *MongoStorage) GetWidgets(ctx context.Context, streamerId string) (*[]Widget, error) {
@@ -81,7 +82,9 @@ func (m *MongoStorage) AddToCurrentAmount(ctx context.Context, streamerId string
 	}
 
 	opts := options.Update().SetUpsert(true)
-	filter = bson.D{{Key: "streamer_id", Value: streamerId}}
+	filter = bson.D{
+		{Key: "streamer_id", Value: streamerId},
+		{Key: "is_active", Value: true}}
 	update := bson.D{{Key: "$inc", Value: bson.D{
 		{Key: "amount_current", Value: donatedAmount}}}}
 

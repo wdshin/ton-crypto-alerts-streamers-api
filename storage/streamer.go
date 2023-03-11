@@ -30,13 +30,23 @@ func (m *MongoStorage) GetStreamerByStreamerId(ctx context.Context, streamerId s
 	return getStreamer(ctx, m.client, filter)
 }
 
+func (m *MongoStorage) GetStreamerByWalletAddress(ctx context.Context, walletAddress string) (*Streamer, error) {
+	filter := bson.D{{Key: "wallet_address", Value: walletAddress}}
+	return getStreamer(ctx, m.client, filter)
+}
+
 func getStreamer(ctx context.Context, client *mongo.Client, filter primitive.D) (*Streamer, error) {
 	dbName := os.Getenv("DB_NAME")
 	collectionName := os.Getenv("DB_STREAMERS_COLLECTION_NAME")
 
 	var result Streamer
-	err := client.Database(dbName).Collection(collectionName).FindOne(ctx, filter).Decode(&result)
+	docResult := client.Database(dbName).Collection(collectionName).FindOne(ctx, filter)
+	if docResult.Err() == mongo.ErrNoDocuments {
+		// Return since no such document in mongo
+		return nil, nil
+	}
 
+	err := docResult.Decode(&result)
 	if err != nil {
 		return nil, err
 	}

@@ -35,7 +35,6 @@ type CreateDonationRequest struct {
 	Amount        uint64 `json:"amount"`
 	From          string `json:"nickname"`
 	WalletAddress string `json:"wallet_address"`
-	StreamerId    string `json:"streamerId"`
 	Message       string `json:"text"`
 	Sign          string `json:"sign"`
 }
@@ -51,11 +50,30 @@ func (s *Service) CreateDonationHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// ToDo: Check wallet address if exist + streamer id
-
 	if req.Sign == "" {
-		log.Error(err)
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		log.Error("Wrong sign: ", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Wrong sign: " + err.Error()))
+		return
+	}
+
+	if req.WalletAddress == "" {
+		log.Error("Please provide wallet address: ", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Please provide wallet address: " + err.Error()))
+		return
+	}
+
+	streamer, err := s.mongoStorage.GetStreamerByWalletAddress(ctx, req.WalletAddress)
+	if err != nil {
+		log.Error("Streamer with current wallet address does not exist: ", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Streamer with current wallet address does not exist: " + err.Error()))
+		return
+	} else if streamer == nil {
+		log.Error("Streamer with current wallet address does not exist: ", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Streamer with current wallet address does not exist: " + err.Error()))
 		return
 	}
 
@@ -76,7 +94,7 @@ func (s *Service) CreateDonationHandler(w http.ResponseWriter, r *http.Request) 
 
 	newDonation := storage.Donation{
 		From:          req.From,
-		StreamerId:    req.StreamerId,
+		StreamerId:    streamer.StreamerId,
 		WalletAddress: req.WalletAddress,
 		Amount:        req.Amount,
 		Message:       req.Message,

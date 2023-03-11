@@ -69,7 +69,7 @@ func (m *MongoStorage) CreateDonation(ctx context.Context, donation Donation) (*
 	return result, nil
 }
 
-func (m *MongoStorage) SaveDonation(ctx context.Context, transaction Tx) (*mongo.UpdateResult, error) {
+func (m *MongoStorage) SaveDonation(ctx context.Context, transaction Tx, streamerId string) (*mongo.UpdateResult, error) {
 	dbName := os.Getenv("DB_NAME")
 	collectionName := os.Getenv("DB_DONATIONS_COLLECTION_NAME")
 
@@ -78,6 +78,7 @@ func (m *MongoStorage) SaveDonation(ctx context.Context, transaction Tx) (*mongo
 	update := bson.D{{Key: "$set", Value: bson.D{
 		{Key: "tx_hash", Value: transaction.TxHash},
 		{Key: "wallet_address", Value: transaction.WalletAddress},
+		{Key: "streamer_id", Value: streamerId},
 		{Key: "amount", Value: transaction.Amount},
 		{Key: "lt", Value: transaction.Lt},
 		{Key: "verified", Value: true}}}}

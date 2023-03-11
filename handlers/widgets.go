@@ -15,9 +15,10 @@ type GetWidgetListResponse struct {
 }
 
 type GetWidgetListModel struct {
-	Type          string  `json:"type,omitempty"`
-	AmountGoal    float64 `json:"amount_goal,omitempty"`
-	AmountCurrent float64 `json:"amount_current,omitempty"`
+	Type          string `json:"type,omitempty"`
+	AmountGoal    uint64 `json:"amount_goal,omitempty"`
+	AmountCurrent uint64 `json:"amount_current,omitempty"`
+	IsActive      bool   `json:"isActive,omitempty"`
 }
 
 func (s *Service) GetWidgetsHandler(w http.ResponseWriter, r *http.Request) {
@@ -46,7 +47,8 @@ func (s *Service) GetWidgetsHandler(w http.ResponseWriter, r *http.Request) {
 		widgetsModel = append(widgetsModel, GetWidgetListModel{
 			Type:          widget.Type,
 			AmountGoal:    widget.AmountGoal,
-			AmountCurrent: widget.AmountCurrent})
+			AmountCurrent: widget.AmountCurrent,
+			IsActive:      widget.IsActive})
 	}
 	response, _ := json.Marshal(&GetWidgetListResponse{&widgetsModel, ""})
 
@@ -55,9 +57,9 @@ func (s *Service) GetWidgetsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type CreateWidgetRequest struct {
-	Type          string  `json:"type,omitempty"`
-	AmountGoal    float64 `json:"amount_goal,omitempty"`
-	AmountCurrent float64 `json:"amount_current,omitempty"`
+	Type          string `json:"type,omitempty"`
+	AmountGoal    uint64 `json:"amount_goal,omitempty"`
+	AmountCurrent uint64 `json:"amount_current,omitempty"`
 }
 
 type CreateWidgetResponse struct {
@@ -98,6 +100,7 @@ func (s *Service) CreateWidgetHandler(w http.ResponseWriter, r *http.Request) {
 		Type:          payload.Type,
 		AmountGoal:    payload.AmountGoal,
 		AmountCurrent: payload.AmountCurrent,
+		IsActive:      true, // ToDo: create active widget selection
 	}
 	result, err := s.mongoStorage.CreateWidget(ctx, widget)
 	if err != nil {

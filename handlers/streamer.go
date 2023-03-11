@@ -11,8 +11,13 @@ import (
 )
 
 type GetStreamerResponse struct {
-	Data  *storage.Streamer `json:"data"`
+	Data  *GetStreamerModel `json:"data"`
 	Error string            `json:"error"`
+}
+
+type GetStreamerModel struct {
+	StreamerId    string `json:"streamerId,omitempty"`
+	WalletAddress string `json:"wallet_address,omitempty"`
 }
 
 func (s *Service) GetStreamerHandler(w http.ResponseWriter, r *http.Request) {
@@ -36,7 +41,11 @@ func (s *Service) GetStreamerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, _ := json.Marshal(&GetStreamerResponse{streamer, ""})
+	response, _ := json.Marshal(
+		&GetStreamerResponse{
+			&GetStreamerModel{
+				StreamerId:    streamer.StreamerId,
+				WalletAddress: streamer.WalletAddress}, ""})
 	w.WriteHeader(http.StatusOK)
 	w.Write(response)
 }
@@ -63,8 +72,23 @@ func (s *Service) SaveStreamerHandler(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&payload)
 
 	if err != nil {
-		response, _ := json.Marshal(&GetStreamerResponse{nil, "Failed to parse new streamer payload!"})
+		response, _ := json.Marshal(&GetStreamerResponse{nil, "Failed to parse new streamer payload."})
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(response)
+		return
+	}
 
+	// ToDo: check by cognitoId
+
+	// Check if another streamer registered such wallet, will allow to update to the same if streamer is the same
+	foundStreamer, err := s.mongoStorage.GetStreamerByWalletAddress(ctx, payload.WalletAddress)
+	if err != nil {
+		response, _ := json.Marshal(&GetStreamerResponse{nil, "Failed to verify streamer's wallet address."})
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(response)
+		return
+	} else if foundStreamer != nil && payload.StreamerId != foundStreamer.StreamerId {
+		response, _ := json.Marshal(&GetStreamerResponse{nil, "Streamer with this wallet address has been already registered."})
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(response)
 		return
