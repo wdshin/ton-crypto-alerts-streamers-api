@@ -125,7 +125,7 @@ func (c *Connector) GetTransactions(ctx context.Context) {
 
 		if donation.Acked {
 			// No need to process acked transaction
-			return
+			continue
 		}
 
 		// fmt.Println("transaction: ", transaction)
