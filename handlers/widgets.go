@@ -24,7 +24,7 @@ type GetWidgetListModel struct {
 func (s *Service) GetWidgetsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	streamerId := parsers.GetStreamerId(r)
+	streamerId := parsers.GetStreamerId(r, s.auth)
 	if streamerId == "" {
 		response, _ := json.Marshal(&GetWidgetListResponse{nil, "Failed to parse streamer id."})
 
@@ -74,7 +74,7 @@ type CreateWidgetResponseModel struct {
 func (s *Service) CreateWidgetHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	streamerId := parsers.GetStreamerId(r)
+	streamerId := parsers.GetStreamerId(r, s.auth)
 	if streamerId == "" {
 		response, _ := json.Marshal(&CreateWidgetResponse{nil, "Failed to parse streamer id."})
 

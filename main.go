@@ -44,7 +44,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	s := handlers.NewService(http.DefaultClient, nil, mongo)
+	auth := utils.NewAuth(context.Background(), &utils.Config{
+		CognitoRegion:     os.Getenv("COGNITO_REGION"),
+		CognitoUserPoolID: os.Getenv("COGNITO_USER_POOL_ID"),
+	})
+
+	s := handlers.NewService(http.DefaultClient, nil, mongo, auth)
 
 	go tonConnector.Start(ctx, 3*time.Second)
 

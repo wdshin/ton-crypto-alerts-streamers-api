@@ -22,10 +22,10 @@ type GetDonationListModel struct {
 
 // ToDo: Confirmed (from transaction), Acked (for sending to notificator)
 
-func (n *Service) GetDonationListHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Service) GetDonationListHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	streamerId := parsers.GetStreamerId(r)
+	streamerId := parsers.GetStreamerId(r, s.auth)
 	if streamerId == "" {
 		response, _ := json.Marshal(&GetDonationListResponse{nil, "Failed to parse streamer id."})
 
@@ -34,7 +34,7 @@ func (n *Service) GetDonationListHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	donations, err := n.mongoStorage.GetStreamerDonations(ctx, streamerId)
+	donations, err := s.mongoStorage.GetStreamerDonations(ctx, streamerId)
 	if err != nil {
 		response, _ := json.Marshal(&GetDonationListResponse{nil, "Failed to load streamer donations."})
 

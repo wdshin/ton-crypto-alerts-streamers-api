@@ -3,35 +3,39 @@ package utils
 import (
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/vladtenlive/ton-donate/utils"
 )
 
-func GetStreamerId(r *http.Request) string {
-	paramName := "streamerId"
-
+func GetStreamerId(r *http.Request, auth *utils.Auth) string {
 	if headerValue := r.Header.Get("Authorization"); headerValue != "" {
-		// ToDo: Parse header value here and get cognitoId
-		cognitoId := ""
-		return cognitoId
-	} else if cognitoId := chi.URLParam(r, paramName); cognitoId != "" {
-		return cognitoId
-	} else if cognitoId := r.URL.Query().Get(paramName); cognitoId != "" {
-		return cognitoId
+		_, claims, err := auth.ParseJWT(headerValue)
+		if err != nil {
+			return ""
+		}
+
+		streamerId, err := claims.GetSubject()
+		if err != nil {
+			return ""
+		}
+
+		return streamerId
 	} else {
 		return ""
 	}
 }
 
-func GetCognitoId(r *http.Request) string {
-	paramName := "cognitoId"
-
+func GetCognitoId(r *http.Request, auth *utils.Auth) string {
 	if headerValue := r.Header.Get("Authorization"); headerValue != "" {
-		// ToDo: Parse header value here and get cognitoId
-		cognitoId := ""
-		return cognitoId
-	} else if cognitoId := chi.URLParam(r, paramName); cognitoId != "" {
-		return cognitoId
-	} else if cognitoId := r.URL.Query().Get(paramName); cognitoId != "" {
+		_, claims, err := auth.ParseJWT(headerValue)
+		if err != nil {
+			return ""
+		}
+
+		cognitoId, err := claims.GetSubject() // Is same as sub
+		if err != nil {
+			return ""
+		}
+
 		return cognitoId
 	} else {
 		return ""

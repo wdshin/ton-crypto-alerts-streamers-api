@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/labstack/gommon/log"
 	"github.com/vladtenlive/ton-donate/storage"
 	parsers "github.com/vladtenlive/ton-donate/utils/parsers"
@@ -23,7 +22,7 @@ type GetStreamerModel struct {
 func (s *Service) GetStreamerHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	cognitoId := parsers.GetCognitoId(r)
+	cognitoId := parsers.GetCognitoId(r, s.auth)
 	if cognitoId == "" {
 		response, _ := json.Marshal(&GetStreamerResponse{nil, "Failed to parse cognito id!"})
 
@@ -51,8 +50,8 @@ func (s *Service) GetStreamerHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type SaveStreamerRequest struct {
-	StreamerId    string `json:"streamerId,omitempty"`
-	CognitoId     string `json:"cognito_id,omitempty"`
+	// StreamerId    string `json:"streamerId,omitempty"`
+	// CognitoId     string `json:"cognito_id,omitempty"`
 	WalletAddress string `json:"wallet_address,omitempty"`
 }
 
@@ -78,7 +77,14 @@ func (s *Service) SaveStreamerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// ToDo: check by cognitoId
+	streamerId := parsers.GetStreamerId(r, s.auth)
+	if streamerId == "" {
+		response, _ := json.Marshal(&GetStreamerResponse{nil, "Failed to parse cognito id!"})
+
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(response)
+		return
+	}
 
 	// Check if another streamer registered such wallet, will allow to update to the same if streamer is the same
 	foundStreamer, err := s.mongoStorage.GetStreamerByWalletAddress(ctx, payload.WalletAddress)
@@ -87,24 +93,24 @@ func (s *Service) SaveStreamerHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(response)
 		return
-	} else if foundStreamer != nil && payload.StreamerId != foundStreamer.StreamerId {
+	} else if foundStreamer != nil && streamerId != foundStreamer.StreamerId {
 		response, _ := json.Marshal(&GetStreamerResponse{nil, "Streamer with this wallet address has been already registered."})
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(response)
 		return
 	}
 
-	var streamerId string
-	if payload.StreamerId == "" {
-		streamerId = uuid.New().String()
-	} else {
-		streamerId = payload.StreamerId
-	}
+	// var streamerId string
+	// if payload.StreamerId == "" {
+	// 	streamerId = uuid.New().String()
+	// } else {
+	// 	streamerId = payload.StreamerId
+	// }
 
 	streamer := storage.Streamer{
 		WalletAddress: payload.WalletAddress,
 		StreamerId:    streamerId,
-		CognitoId:     payload.CognitoId,
+		CognitoId:     streamerId, // ToDo: get from cognito, but they are actually same guid.
 	}
 
 	_, err = s.mongoStorage.SaveStreamer(ctx, streamer)
