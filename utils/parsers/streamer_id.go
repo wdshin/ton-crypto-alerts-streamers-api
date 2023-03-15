@@ -8,8 +8,8 @@ import (
 
 func GetStreamerId(r *http.Request, auth *utils.Auth) string {
 	if headerValue := r.Header.Get("Authorization"); headerValue != "" {
-		_, claims, err := auth.ParseJWT(headerValue)
-		if err != nil {
+		token, claims, err := auth.ParseJWT(headerValue)
+		if err != nil || !token.Valid {
 			return ""
 		}
 
@@ -26,8 +26,8 @@ func GetStreamerId(r *http.Request, auth *utils.Auth) string {
 
 func GetCognitoId(r *http.Request, auth *utils.Auth) string {
 	if headerValue := r.Header.Get("Authorization"); headerValue != "" {
-		_, claims, err := auth.ParseJWT(headerValue)
-		if err != nil {
+		token, claims, err := auth.ParseJWT(headerValue)
+		if err != nil || !token.Valid {
 			return ""
 		}
 
