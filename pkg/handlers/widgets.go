@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/vladtenlive/ton-donate/storage"
-	parsers "github.com/vladtenlive/ton-donate/utils/parsers"
+	"github.com/vladtenlive/ton-donate/pkg/storage"
+	parsers "github.com/vladtenlive/ton-donate/pkg/utils/parsers"
 )
 
 type GetWidgetListResponse struct {

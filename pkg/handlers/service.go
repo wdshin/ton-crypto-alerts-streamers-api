@@ -3,8 +3,8 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/vladtenlive/ton-donate/storage"
-	"github.com/vladtenlive/ton-donate/utils"
+	"github.com/vladtenlive/ton-donate/pkg/storage"
+	"github.com/vladtenlive/ton-donate/pkg/utils"
 )
 
 type Service struct {

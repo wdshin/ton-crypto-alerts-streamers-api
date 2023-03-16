@@ -3,7 +3,7 @@ package utils
 import (
 	"net/http"
 
-	"github.com/vladtenlive/ton-donate/utils"
+	"github.com/vladtenlive/ton-donate/pkg/utils"
 )
 
 func GetStreamerId(r *http.Request, auth *utils.Auth) string {

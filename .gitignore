@@ -1,9 +1,13 @@
-.env
-ton-donate
-main
 .vscode
 
+# Artifacts and executables
+ton-donate
+main
+
+# Environment files
+.env
 .env*
 !.env.example
 
-
+# Logs and build errors
+*.log

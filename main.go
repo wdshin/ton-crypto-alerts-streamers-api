@@ -11,10 +11,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"github.com/vladtenlive/ton-donate/handlers"
-	"github.com/vladtenlive/ton-donate/storage"
-	"github.com/vladtenlive/ton-donate/ton"
-	"github.com/vladtenlive/ton-donate/utils"
+	"github.com/vladtenlive/ton-donate/pkg/handlers"
+	"github.com/vladtenlive/ton-donate/pkg/storage"
+	"github.com/vladtenlive/ton-donate/pkg/ton"
+	"github.com/vladtenlive/ton-donate/pkg/utils"
 )
 
 func main() {

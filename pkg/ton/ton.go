@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/vladtenlive/ton-donate/storage"
+	"github.com/vladtenlive/ton-donate/pkg/storage"
 	"github.com/xssnick/tonutils-go/address"
 	"github.com/xssnick/tonutils-go/liteclient"
 	"github.com/xssnick/tonutils-go/tlb"
