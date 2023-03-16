@@ -14,6 +14,8 @@ func ValidateEnvVariables() {
 		"TON_NET",
 		"NOTIFICATION_URL",
 		"TON_CONFIG_URL",
+		"COGNITO_REGION",
+		"COGNITO_USER_POOL_ID",
 	}
 
 	for _, envVarName := range envVarNames {

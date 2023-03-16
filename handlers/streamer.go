@@ -24,7 +24,7 @@ func (s *Service) GetStreamerHandler(w http.ResponseWriter, r *http.Request) {
 
 	cognitoId := parsers.GetCognitoId(r, s.auth)
 	if cognitoId == "" {
-		response, _ := json.Marshal(&GetStreamerResponse{nil, "Failed to parse cognito id!"})
+		response, _ := json.Marshal(&GetStreamerResponse{nil, "Failed to parse cognito id."})
 
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(response)
@@ -32,8 +32,8 @@ func (s *Service) GetStreamerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	streamer, err := s.mongoStorage.GetStreamerByCognitoId(ctx, cognitoId)
-	if err != nil {
-		response, _ := json.Marshal(&GetStreamerResponse{nil, "Streamer with such id does not exist!"})
+	if err != nil || streamer == nil {
+		response, _ := json.Marshal(&GetStreamerResponse{nil, "Streamer with such id does not exist."})
 
 		w.WriteHeader(http.StatusNotFound)
 		w.Write(response)
@@ -50,8 +50,6 @@ func (s *Service) GetStreamerHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type SaveStreamerRequest struct {
-	// StreamerId    string `json:"streamerId,omitempty"`
-	// CognitoId     string `json:"cognito_id,omitempty"`
 	WalletAddress string `json:"wallet_address,omitempty"`
 }
 
@@ -99,13 +97,6 @@ func (s *Service) SaveStreamerHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write(response)
 		return
 	}
-
-	// var streamerId string
-	// if payload.StreamerId == "" {
-	// 	streamerId = uuid.New().String()
-	// } else {
-	// 	streamerId = payload.StreamerId
-	// }
 
 	streamer := storage.Streamer{
 		WalletAddress: payload.WalletAddress,

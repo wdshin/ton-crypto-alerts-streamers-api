@@ -77,7 +77,6 @@ func main() {
 
 	r.Group(func(r chi.Router) {
 		r.Get("/streamer", s.GetStreamerHandler)
-		r.Get("/streamer/{cognitoId}", s.GetStreamerHandler)
 		r.Post("/streamer", s.SaveStreamerHandler)
 	})
 	r.Group(func(r chi.Router) {
