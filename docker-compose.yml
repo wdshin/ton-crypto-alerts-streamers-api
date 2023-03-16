@@ -1,23 +1,23 @@
 version: '3'
 
 services:
-  # streaming:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   container_name: streaming-dev
-  #   stdin_open: true # docker run -i
-  #   tty: true        # docker run -t
-  #   ports:
-  #     - "3901:8080"
-  #   volumes:
-  #     - .:/usr/src/app
-  #   env_file:
-  #     - ./.env.${ENV}
-  #   depends_on:
-  #     - mongodb
-  #   networks:
-  #     - dev
+  streamer:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: streamer-api-dev
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+    ports:
+      - "3901:8080"
+    volumes:
+      - .:/usr/src/app
+    env_file:
+      - ./.env.${ENV}
+    depends_on:
+      - mongodb
+    networks:
+      - dev
 
   mongodb:
     image: mongo:latest

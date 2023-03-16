@@ -1,8 +1,13 @@
-TODO:
+# Crypto Alerts Streamers API
 
-0. Critical - Think how to wait until transaction is finished - maybe use queue callback? Or maybe use some kind of event?
+Crypto alerts streamers backend API for registering streamers, creating twitch widgets and donations.
 
-1. Wrap Redis Cache
+# Development
 
+Build inside docker container:
+
+`ENV=dev docker-compose -f docker-compose.yml up --build --force-recreate`
+
+Local testing, add env variables from file:
 
 `export $(grep -v '^#' .env | xargs)`
